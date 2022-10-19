@@ -1,22 +1,22 @@
 const BASE_URL = 'https://jsonplaceholder.typicode.com';
 
-const loader = ({ state = 'show' }) => {
-    const p = document.querySelector('#loader');
+const loader = ({ state = 'show', query }) => {
+    const p = document.querySelector(query);
     p.textContent = 'Loading...';
     p.style.display = state === 'hide' ? 'none' : 'block';
 }
 
 const getUsers = async () => {
     try {
-        loader({ state: 'show' });
+        loader({ state: 'show', query: '#user-loader' });
         const res = await fetch(`${BASE_URL}/users`);
         const users = await res.json();
         return users;
     } catch (error) {
         console.log('error::', error);
-        // alert("Error fetching users. Kindly check your internet connection and try again.");
+        alert("Error fetching users. Kindly check your internet connection and try again.");
     } finally {
-        loader({ state: 'hide' });
+        loader({ state: 'hide', query: '#user-loader' });
     }
 }
 
@@ -33,15 +33,35 @@ const addHeadersToTable = ({ headers, table }) => {
 
 const getAllPostByUserId = async ({user_id}) => {
     try {
-        loader({ state: 'show' });
+        loader({ state: 'show', query: '#post-loader' });
         const res = await fetch(`${BASE_URL}/users/${user_id}/posts`);
         const posts = await res.json();
         return posts;
     } catch (error) {
         console.log('error::', error);
-        // alert("Error fetching user posts. Kindly check your internet connection and try again.");
+        alert("Error fetching user posts. Kindly check your internet connection and try again.");
     } finally {
-        loader({ state: 'hide' });
+        loader({ state: 'hide', query: '#post-loader' });
+    }
+}
+
+const displayUserPosts = async ({ user_id, name }) => { 
+    const dl = window.document.querySelector('dl');
+    dl.innerHTML = '';
+    const posts = await getAllPostByUserId({ user_id });
+    const postTitle = window.document.querySelector('#post-title');
+    postTitle.textContent = `${name}'s posts`;
+    for (let i = 0; i < posts.length; i++) {
+        const post = posts[i];
+        const dt = document.createElement('dt')
+        dt.innerHTML = post.title;
+        dt.style.color = 'blue';
+        dt.style.marginTop = '20px';
+        const dd = document.createElement('dd')
+        dt.innerHTML = post.title;
+        dd.innerHTML = post.body;        
+        dl.appendChild(dt);
+        dl.appendChild(dd);
     }
 }
 
@@ -74,9 +94,8 @@ const getAllPostByUserId = async ({user_id}) => {
             action.href = '#';
             action.innerHTML = '<p>View Posts</p>';
             row.insertCell(5).appendChild(action);
-            action.onclick = async () => {
-                const posts = await getAllPostByUserId(user.id);
-                console.log();
+            action.onclick = async () => {                
+                await displayUserPosts({user_id: user.id, name: user.name})
             }
         }
     }
